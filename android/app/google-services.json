@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "206681813825",
+    "project_id": "myworkapp-2308b",
+    "storage_bucket": "myworkapp-2308b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:206681813825:android:28ce8d03d366eed8ba27c0",
+        "android_client_info": {
+          "package_name": "com.myworkapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "206681813825-f0clkpjlnlbfoggrtnv700jl83cnucae.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.myworkapp",
+            "certificate_hash": "e71fef51d8b1c1b2663b4c7c57ca0bd4fd5b3919"
+          }
+        },
+        {
+          "client_id": "206681813825-4srdeihlcbb4dbbchltuo0kjmh7q7ij9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvngPGXRWb8efSrvkaTc7R3FY_Z-an-54"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "206681813825-4srdeihlcbb4dbbchltuo0kjmh7q7ij9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

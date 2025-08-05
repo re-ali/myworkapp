@@ -11,6 +11,7 @@ import ReactNativeBiometrics, { BiometryTypes } from 'react-native-biometrics';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Navigator from './src/navigation/Navigatior';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { getFCMToken, requestNotificationPermission, setupNotificationHandlers } from './src/notifications/firebaseNotification';
  
  
 
@@ -26,19 +27,16 @@ function App() {
   }, []);
 
 
+
+ 
+
+
   return (
-    // <GestureHandlerRootView style={{ backgroundColor: 'pink', flex: 1, }}>
-      // <SafeAreaView style={{ 
-      //   flex: 1,
-      //  backgroundColor: 'red'
-      //  }} 
-      //  edges={['top', 'right', 'bottom', 'left']}
-      //  >
+    <GestureHandlerRootView style={{ backgroundColor: 'pink', flex: 1, }}>
       <SafeAreaProvider >
         <Navigator />
       </SafeAreaProvider>  
-       //</SafeAreaView>
-    // </GestureHandlerRootView>
+    </GestureHandlerRootView>
   )
 }
 

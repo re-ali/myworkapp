@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react'
-import { View, Text, TouchableOpacity, Image, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Button, FlatList } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
+import { View, Text, TouchableOpacity, Image, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Button, FlatList, Animated } from 'react-native'
 import Scale from '../helper/Scale';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { IMAGES } from '../assets/imagePath';
@@ -21,6 +21,9 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
   const [pasword, setPassword] = useState<string>('');
 
   const refRBSheet = useRef<RBSheet>(null);
+
+   const moveAnim = useRef(new Animated.Value(0)).current;
+
 
 
 
@@ -75,6 +78,24 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
     </View>
   );
 
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(moveAnim, {
+          toValue: 200,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(moveAnim, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [moveAnim]);
+
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -111,16 +132,15 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
             {/* <Entypo name="flow-branch" size={Scale(60)} /> */}
 
             <Text style={{ textAlign: 'left' }}>Email</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={onChangeNumber}
-              value={email}
-              placeholder="useless placeholder"
-              keyboardType="default"
-            />
-            {renderError('emailError')}
- 
- 
+             <Text style={styles.title}>Simple Animation Test</Text>
+      <Animated.View
+        style={[
+          styles.box,
+          {
+            transform: [{ translateX: moveAnim }],
+          },
+        ]}
+      />
 
           </View>
         </View>
@@ -172,6 +192,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+ box: {
+    width: 100,
+    height: 100,
+    backgroundColor: '#007AFF',
+    borderRadius: 10,
+  },
+ 
+
   subtitleRow: {
     flexDirection: 'row',
     alignItems: 'center',

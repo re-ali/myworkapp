@@ -4,7 +4,8 @@ import {
   UIManager,
   findNodeHandle,
   KeyboardAvoidingView, Platform, ScrollView, FlatList, Dimensions, Pressable,
-  TouchableHighlight
+  TouchableHighlight,
+  Alert
 } from 'react-native'
 import Scale from '../helper/Scale';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -14,6 +15,9 @@ import { TextInput } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Slider from '@react-native-community/slider';
+
+import Popover, { PopoverMode, Rect } from 'react-native-popover-view';
+
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import RBSheet from 'react-native-raw-bottom-sheet';
@@ -26,6 +30,10 @@ import Tooltip from 'react-native-walkthrough-tooltip';
 import CustomSlider from '../componets/CustomSlider';
 
 
+const screenWidth = Dimensions.get('window').width;
+
+const tooltipWidth = 250;
+
 
 interface LoginProps {
   navigation: any;
@@ -33,11 +41,11 @@ interface LoginProps {
 ;
 
 const dataff = [
-  { id: '1', title: 'Item 1', description: 'Desc 1', color: '#FF5733' }, // red-orange
-  { id: '2', title: 'Item 2', description: 'Desc 2', color: '#33C1FF' }, // sky blue
-  { id: '3', title: 'Item 3', description: 'Desc 3', color: '#28A745' }, // green
-  { id: '4', title: 'Item 4', description: 'Desc 4', color: '#FFC107' }, // yellow
-  { id: '5', title: 'Item 5', description: 'Desc 5', color: '#9C27B0' }, // purple
+  { id: '1', title: 'Item 1 COntin meri ksfl fdfds fdf d ', description: 'Desc 1j,hdjfd fdsfdhfkdsfdsfksjdfbdksjhfkdj', color: '#FF5733' }, // red-orange
+  { id: '2', title: 'Item 2lkljfdsf dsf dfdfd', description: 'Desc 2 fdjfdfdkfdfdf', color: '#33C1FF' }, // sky blue
+  { id: '3', title: 'Item 3 lkfsdlfdsfdf', description: 'Desc 3 jfdjfdfdfd', color: '#28A745' }, // green
+  { id: '4', title: 'Item 4fdsfdsf dfkdlfd', description: 'Desc 4 kjfdjkfdkfdf', color: '#FFC107' }, // yellow
+  { id: '5', title: 'Item 5fdsfdsfdsd', description: 'Desc 5 kjbfdkfbdkjf', color: '#9C27B0' }, // purple
 ];
 
 const screen = Dimensions.get('screen');
@@ -53,31 +61,19 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const itemRefs = useRef<{ [key: string]: any }>({});
 
+  const [tooltipSize, setTooltipSize] = useState({ width: 0, height: 0 });
+  const [arrowOffset, setArrowOffset] = useState(0); // X-offset for the arrow
+
   const [ratings, setRatings] = useState<{ [key: string]: number }>(() => {
 
     const initialRatings: any = {};
 
     dataff.forEach((item) => {
-      initialRatings[item.id] = 4;
+      initialRatings[item.id] = 1;
     });
     return initialRatings;
   });
 
-  const [selectedSliderId, setSelectedSliderId] = useState<string | null>(null);
-
-
-  const [rating, setRating] = useState(0); // From 0 to 5
-
-
-  // const openPopover = (item: any) => {
-  //   setSelectedItem(item);
-  //   setVisible(true);
-  // };
-
-  // const closePopover = () => {
-  //   setVisible(false);
-  //   setSelectedItem(null);
-  // };
 
 
   const openPopover = (item: any) => {
@@ -89,7 +85,7 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
         UIManager.measureInWindow(
           nodeHandle,
           (x, y, width, height) => {
-            setTooltipPosition({ x: x + width / 2, y });
+            setTooltipPosition({ x: x + width / 2, y: y });
             setSelectedItem(item);
             setVisible(true);
           }
@@ -133,8 +129,8 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
         <FontAwesome
           key={i}
           name={iconName}
-          size={12}
-          color={i <= rating ? '#FFD700' : '#cc5c'} // gold or grey
+          size={16}
+          color={i <= rating ? 'red' : '#cc5c'} // gold or grey
           style={{ marginHorizontal: 5 }}
         />
       );
@@ -149,37 +145,56 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
         // ref={(ref) => (itemRefs.current[item.id] = ref)}
         style={styles.itemContainer}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}></View>
-        <Text style={styles.itemText}>{item.title}
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          // flex: 1,
+          width: 300,
+          justifyContent: 'space-between'
+        }}>
+          <View style={{
+            // flex: 0.7,
+            width: 230,
+            // backgroundColor:'pink'
+          }}>
+            <Text style={styles.itemText} numberOfLines={2}>{item.title}
+              <View
+              // ref={(ref) => { itemRefs.current[item.id] = ref }}
+              // collapsable={false} // IMPORTANT for Android
+              >
+                <TouchableOpacity
+                  ref={(ref) => { itemRefs.current[item.id] = ref }}
+                  onPress={() => openPopover(item)}
+                  style={{ paddingHorizontal: 2 }}
+                >
+                  <Feather name='info' size={15} color={'gray'} style={{ marginLeft: 4 }} />
+                </TouchableOpacity>
+              </View>
+            </Text>
+
+          </View>
+
           <TouchableOpacity
-            ref={(ref) => { itemRefs.current[item.id] = ref }}
-            onPress={() => openPopover(item)}
-            style={{ paddingHorizontal: 4 }}
-          >
-            <Feather name='info' size={15} color={'gray'} style={{ marginLeft: 4 }} />
+            onPress={() => Alert.alert('hi')}
+            style={{
+              flexDirection: 'row',
+              // flex: 0.2,
+              width: 120,
+              // backgroundColor:'green'
+              // backgroundColor:'red'
+            }}>
+            {renderStars(ratings[item.id], item.color)}
           </TouchableOpacity>
-
-        </Text>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-          {renderStars(ratings[item.id], item.color)}
         </View>
-
-        {/* <Slider
-        style={{ width: '100%', marginTop: 10 }}
-        minimumValue={0}
-        maximumValue={5}
-        step={0.5}
-        value={ratings[item.id]}
-        onValueChange={(value) => handleRatingChange(item.id, value)}
-        onSlidingStart={() => setSelectedSliderId(item.id)}
-        minimumTrackTintColor="#FFD700"
-        maximumTrackTintColor="#000"
-      /> */}
-
+        <CustomSlider
+          value={ratings[item.id] || 0}
+          onValueChange={(val: number) => handleRatingChange(item.id, val)}
+          trackColor={item.color}
+          thumbColor={item.color}
+        />
       </View>
 
-      <Slider
+      {/* <Slider
         style={{
           width: 250,
           height: 40,
@@ -187,17 +202,21 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
         minimumValue={0}
         maximumValue={5}
         step={0.5}
-        value={rating}
+        value={ratings}
         onValueChange={(value) => handleRatingChange(item.id, value)}
         onSlidingStart={() => setSelectedSliderId(item.id)}
         minimumTrackTintColor={item.color}
         maximumTrackTintColor="#c5cc"
         thumbTintColor={item.color}
 
-      />
+      /> */}
+
+
+
     </>
 
   );
+ 
 
 
 
@@ -206,13 +225,6 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
     // behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-
-        {/* {visibleId && (
-          <Pressable
-            style={styles.overlay}
-            onPress={() => setVisibleId(null)}
-          />
-        )} */}
         <View style={{
           flex: 1,
           backgroundColor: Colors.mainColor,
@@ -220,16 +232,45 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
           justifyContent: 'center'
         }}>
 
-          <FlatList
-            data={dataff}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItemd}
-            contentContainerStyle={{ padding: 16 }}
-          />
 
+  <FlatList
+          data={dataff}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItemd}
+          contentContainerStyle={{ padding: 16 }}
+        />
+{/* 
+          <Popover
+            isVisible={visible}
+            from={new Rect(330, 33, 40, 20)}
+            onRequestClose={closePopover}
+            mode={PopoverMode.RN_MODAL}
+            backgroundStyle={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
+            popoverStyle={
+              {
+                width: Scale(200),
+                height: Scale(250),
+                shadowColor: '#000',
+                alignItems: 'flex-start',
+                justifyContent: 'flex-start',
+                backgroundColor: Colors.red,
+                paddingTop: Scale(20),
+                marginRight: Scale(20),
+                borderRadius: Scale(10),
+                top: tooltipPosition.y - 50,
+                // left: tooltipPosition.x - 95, // half of tooltip width
+                left: Math.max(10, tooltipPosition.x + tooltipPosition.x / 2 - tooltipWidth / 2), // center above icon
 
+              }
+            }
+          >
+            <Text style={{ fontWeight: 'bold' }}>
+              {selectedItem?.title}
+            </Text>
+            <Text>{selectedItem?.description}</Text>
+          </Popover> */}
 
-          <RNModal
+         <RNModal
             isVisible={visible}
             onBackdropPress={closePopover}
             backdropOpacity={0.3}
@@ -242,25 +283,46 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
               style={[
                 styles.tooltipWrapper,
                 {
-                  top: tooltipPosition.y - 70,
-                  left: tooltipPosition.x - 80, // half of tooltip width
+                  top: tooltipPosition.y - 50,
+                  // left: tooltipPosition.x - 95, // half of tooltip width
+                  left: Math.max(10, tooltipPosition.x + tooltipPosition.x / 2 - tooltipWidth / 2), // center above icon
+
                 },
               ]}
             >
-              <View style={styles.tooltipBox}>
+              <View style={[styles.tooltipBox, {
+                top: tooltipPosition.y - tooltipSize.height - 10,
+                left: Math.min(
+                  Math.max(tooltipPosition.x - tooltipSize.width / 2, 8),
+                  screenWidth - tooltipSize.width - 8
+                ),
+              }]}
+
+                onLayout={(event) => {
+                  const { width, height } = event.nativeEvent.layout;
+                  setTooltipSize({ width, height });
+
+                  const leftPadding = Math.min(
+                    Math.max(tooltipPosition.x - width / 2, 8),
+                    screenWidth - width - 8
+                  );
+                  setArrowOffset(tooltipPosition.x - leftPadding); // align arrow relative to tooltip box
+                }}
+
+              >
                 <Text style={styles.tooltipText}>{selectedItem?.description}</Text>
               </View>
-              <View style={styles.tooltipArrow} />
+              <View style={[styles.tooltipArrow, {
+                position: 'absolute',
+                top: tooltipSize.height - 1,
+                left: arrowOffset - 8, // center notch (8 is half the arrow width)
+              }]} />
             </View>
-          </RNModal>
-
-          <View style={styles.container}>
-            <Text style={styles.text}>Rating: {rating.toFixed(1)}</Text>
-            <View style={styles.starRow}>{renderStars()}</View>
+          </RNModal> 
 
 
 
-            {/* <Tooltip
+          {/* <Tooltip
                 isVisible={visible}
                 content={<Text>Check this out!</Text>}
                 placement="top"
@@ -270,7 +332,6 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
                   <Text>Press me</Text>
                 </TouchableHighlight>
               </Tooltip> */}
-          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -300,9 +361,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   itemContainer: {
-    flexDirection: 'row',
     marginVertical: 4,
-    alignItems: 'center',
+    // alignItems: 'center',
     // backgroundColor: Colors.red,
     borderRadius: 10,
     paddingHorizontal: 10,
@@ -320,8 +380,6 @@ const styles = StyleSheet.create({
     // backgroundColor: '#4287f5',
     color: '#000',
     fontSize: 13,
-    padding: 2,
-    borderRadius: 8,
   },
 
   errorViewStyle: {
@@ -389,11 +447,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tooltipBox: {
-    backgroundColor: '#ddd',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    zIndex: 10,
+    // backgroundColor: '#ddd',
+    // paddingVertical: 10,
+    // paddingHorizontal: 16,
+    // borderRadius: 8,
+    // zIndex: 10,
+    width: tooltipWidth,
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
   tooltipText: {
     color: '#000',
@@ -408,7 +475,6 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     borderTopColor: '#fff',
-    marginTop: -1,
   },
 })
 

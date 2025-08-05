@@ -1,5 +1,8 @@
 import React, { useRef, useState } from 'react'
-import { View, Text, TouchableOpacity, Image, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Button, FlatList, StatusBar } from 'react-native'
+import { View, Text, TouchableOpacity, Image, StyleSheet,
+    Animated,
+  KeyboardAvoidingView, Platform, ScrollView, Button, FlatList, StatusBar, 
+  Easing} from 'react-native'
 import Scale from '../helper/Scale';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { IMAGES } from '../assets/imagePath';
@@ -9,8 +12,10 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import RBSheet from 'react-native-raw-bottom-sheet';
 // import UploadMedia from '../componets/UploadMedia';
-import Video from 'react-native-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getFCMToken, requestNotificationPermission, setupNotificationHandlers } from '../notifications/firebaseNotification';
+
+
 
 
 interface LoginProps {
@@ -19,7 +24,56 @@ interface LoginProps {
 
 interface imapeProp {
   uri: string
-}
+};
+
+const parentData = [
+  { id: '1', title: 'Item 1', children: ['A', 'B', 'C'] },
+  { id: '2', title: 'Item 2', children: ['D', 'E', 'F'] },
+  { id: '3', title: 'Item 3', children: ['G', 'H'] },
+];
+
+const benefitsData = [
+  {
+    id: 0,
+    title: 'After Hours Visits',
+    subTitle: 'used of your After hour visits benefit.',
+    annualLimit: '3',
+    usedLimit: '0',
+    isExpend: false,
+  },
+  {
+    id: 1,
+    title: 'Breathing Device',
+    subTitle: 'used of your After hour visits benefit.',
+    annualLimit: '3',
+    usedLimit: '0',
+    isExpend: false,
+  },
+  {
+    id: 2,
+    title: 'COVID Antigen Testing',
+    subTitle: 'used of your After hour visits benefit.',
+    annualLimit: '3',
+    usedLimit: '0',
+    isExpend: false,
+  },
+  {
+    id: 3,
+    title: 'Over Counter Medication',
+    subTitle: 'used of your After hour visits benefit.',
+    annualLimit: '3',
+    usedLimit: '0',
+    isExpend: false,
+  },
+  {
+    id: 4,
+    title: 'After Hours Visits',
+    subTitle: 'used of your After hour visits benefit.',
+    annualLimit: '3',
+    usedLimit: '0',
+    isExpend: false,
+  },
+];
 
 const Home: React.FC<LoginProps> = ({ navigation }) => {
 
@@ -28,6 +82,10 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
 
   const [email, onChangeNumber] = useState<string>('');
   const [pasword, setPassword] = useState<string>('');
+
+   const [openCard, setOpenCard] = useState<string | null>(null);
+  const animValuesRef = useRef<{ [key: string]: Animated.Value[] }>({});
+
 
   // const refRBSheet = useRef<RBSheet>(null);
   // const refRBSheet = useRef<typeof RBSheet | null>(null);
@@ -39,12 +97,51 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
   const [imagePath, setImage] = useState<imapeProp>({ uri: '' });
 
 
+  const [expandedCardIds, setExpandedCardIds] = useState<number[]>([]);
 
 
   const [errors, setErrors] = useState<{
     emailError?: string;
     passwordError?: string;
   }>({});
+
+
+   const toggleExpand = (id: number) => {
+    setExpandedCardIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+
+     // Notification Related Code
+  React.useEffect(() => {
+    // const initNotifications = async () => {
+    //   const granted = await requestNotificationPermission();
+    //   console.log('granted use effect >>>', granted);
+
+    //   if (granted) {
+    //     const token = await getFCMToken();
+    //     console.log('Device  Token:>>>>>>>>', token);
+    //     // dispatch(setFcmTokenReduxAction(token));
+
+    //     if (token) {
+    //       const unsubscribe = setupNotificationHandlers();
+    //       return unsubscribe;
+    //     }
+    //   }
+    // };
+
+    // let unsubscribeHandler:any;
+    // initNotifications().then(unsub => {
+    //   unsubscribeHandler = unsub;
+    // });
+
+    // return () => {
+    //   if (typeof unsubscribeHandler === 'function') {
+    //     unsubscribeHandler();
+    //   }
+    // };
+  }, []);
 
 
   const validate = () => {
@@ -77,7 +174,7 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
     setErrors(errorsCopy);
 
     return valid
-  }
+  };
 
   const handleLogin = () => {
 
@@ -87,7 +184,77 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
     if (validate()) {
       console.log('hi')
     }
+  };
+
+
+  
+const handlePress = (item: typeof parentData[0]) => {
+  const isOpen = openCard === item.id;
+
+  if (!isOpen) {
+    setOpenCard(item.id);
+
+    // Reset animation values before replaying
+    if (!animValuesRef.current[item.id]) {
+      animValuesRef.current[item.id] = item.children.map(() => new Animated.Value(0));
+    } else {
+      animValuesRef.current[item.id].forEach(anim => anim.setValue(0));
+    }
+
+    // Animate each child with stagger
+    Animated.stagger(
+      500,
+      animValuesRef.current[item.id].map(anim =>
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        })
+      )
+    ).start();
+  } else {
+    setOpenCard(null);
   }
+};
+
+
+  const renderItem = ({ item }: { item: typeof parentData[0] }) => {
+    const isOpen = openCard === item.id;
+    const animValues = animValuesRef.current[item.id] || [];
+
+    return (
+      <View style={styles.card}>
+        <TouchableOpacity onPress={() => handlePress(item)}>
+          <Text style={styles.titleStyle}>{item.title}</Text>
+        </TouchableOpacity>
+
+        {isOpen &&
+          item.children.map((child, index) => {
+            const anim = animValues[index];
+            return (
+              <Animated.View
+                key={index}
+                style={{
+                  opacity: anim,
+                  transform: [
+                    {
+                      translateY: anim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [20, 0],
+                      }),
+                    },
+                  ],
+                  paddingVertical: 4,
+                }}
+              >
+                <Text style={styles.childText}>{child}</Text>
+              </Animated.View>
+            );
+          })}
+      </View>
+    );
+  };
 
   const renderError = (field: keyof typeof errors) => {
     const errorMsg = errors[field];
@@ -98,43 +265,60 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
     ) : null;
   };
 
-  const handleInputChange = (field: 'email' | 'password', value: string) => {
-    if (field === 'email') {
-      onChangeNumber(value);
-      if (errors.emailError) {
-        setErrors({ ...errors, emailError: '' });
-      }
-    }
 
-  }
+  const renderCard = ({ item }: { item: typeof benefitsData[0] }) => {
+    const isExpanded = expandedCardIds.includes(item.id);
 
-  const sampleData = new Array(10).fill(null).map((_, index) => ({
-    id: index.toString(),
-    title: `Title ${index + 1}`,
-    subtitle: `This is subtitle ${index + 1}`,
-    image: 'https://via.placeholder.com/60',
-  }));
+    return (
+      <View style={styles.card}>
+        <TouchableOpacity
+          onPress={() => toggleExpand(item.id)}
+          style={styles.headerRow}>
+          <Text style={styles.title}>{item.title}</Text>
+        <Ionicons
+          name={isExpanded ? 'chevron-down-outline' : 'chevron-forward-outline'}
+          size={20}
+          color="#000"
+        />
+        </TouchableOpacity>
 
+        <Text style={styles.limit}>
+          {item.usedLimit}/{item.annualLimit}{' '}
+          <Text style={styles.used}>used</Text>
+        </Text>
 
-  const renderItem = ({ item }: { item: typeof sampleData[0] }) => (
-    <View style={styles.itemContainer}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-      <View style={styles.textContainer}>
-        <Text style={styles.title}>{item.title}</Text>
-        <View style={styles.subtitleRow}>
-          <Text style={styles.subtitle}>{item.subtitle}</Text>
-          <FontAwesome name="star" size={18} color="gold" style={styles.star} />
-        </View>
+        {isExpanded && (
+          <>
+            <View style={styles.divider} />
+            <Text style={styles.subtitle}>{item.subTitle}</Text>
+            <View style={styles.row}>
+              <Text style={styles.used}>Annual limit</Text>
+              <Text style={styles.limit}>{item.annualLimit} times</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.used}>Used</Text>
+              <Text style={styles.limit}>{item.usedLimit} times</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.row}>
+              <Text style={[styles.available, { color: 'black' }]}>Available</Text>
+              <Text style={[styles.available, { color: 'orange' }]}>
+                {item.annualLimit} <Text style={{ color: 'black' }}>times</Text>
+              </Text>
+            </View>
+          </>
+        )}
       </View>
-    </View>
-  );
-
+    );
+  };
+ 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
 
       <ScrollView contentContainerStyle={[{ flexGrow: 1 },{
-        // marginTop: insets.bottom,
-        // backgroundColor:'red'
+        // marginTop: insets.top,
+          // backgroundColor: Colors.mainColor,
+        backgroundColor:'red'
       }]}>
         <View style={{
           flex: 1,
@@ -143,24 +327,21 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
           justifyContent: 'center'
         }}>
 
-          <Image source={IMAGES.bal} style={{
-            width:50, height:50
-          }} />
+         
           <View style={{
             flex: 0.3,
-            // backgroundColor:'yellow',
             alignItems: 'center',
             justifyContent: 'center',
             paddingTop: Scale(20)
 
           }}>
-            <Image
+            {/* <Image
               source={IMAGES.Logo}
               // source={imagePath ? { uri: imagePath?.uri } : IMAGES.Logo}
 
               style={{ width: Scale(250), height: Scale(250) }}
               resizeMode='contain'
-            />
+            /> */}
             {/* <Text style={{ fontSize: Scale(40), color: 'red', fontWeight: '700', marginTop: 30 }}>Welcome To My App</Text> */}
           </View>
 
@@ -174,68 +355,21 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
           }}>
             {/* <Entypo name="flow-branch" size={Scale(60)} /> */}
 
-            <Text style={{ textAlign: 'left' }}>Email</Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={onChangeNumber}
-              value={email}
-              placeholder="useless placeholder"
-              keyboardType="default"
-            />
-            {renderError('emailError')}
- 
-            <TouchableOpacity
-              onPress={() => setShowModal(true)}
-              // onPress={handleLogin}
-              style={{
-                backgroundColor: 'green', marginTop: Scale(120),
-                alignSelf: "center",
-                width: Scale(450), height: Scale(100), borderRadius: Scale(20), alignItems: 'center', justifyContent: 'center'
-              }}>
+           
 
-              <Text style={{ fontSize: 25, color: 'white' }}>Select Image</Text>
-
-            </TouchableOpacity>
-
-
-
-
-            <RBSheet
-              ref={refRBSheet}
-              height={300}
-              openDuration={250}
-              // closeOnDragDown={true}
-              closeOnPressMask={true}
-              customStyles={{
-                wrapper: {
-                  backgroundColor: 'rgba(0,0,0,0.5)',
-                },
-                draggableIcon: {
-                  backgroundColor: '#000',
-                },
-                container: {
-                  borderTopLeftRadius: 20,
-                  borderTopRightRadius: 20,
-                  padding: 20,
-                },
-              }}
-            >
-              <Text style={styles.sheetText}>👋 Hello from Bottom Sheet</Text>
-              <Button title="Close" onPress={() => refRBSheet.current?.close()} />
-              <FlatList
-                data={sampleData}
-                keyExtractor={(item) => item.id}
+             <FlatList
+                data={parentData}
                 renderItem={renderItem}
-                contentContainerStyle={{ padding: 16 }}
-              />
-            </RBSheet>
-{/* 
-            <UploadMedia
-              modalVisible={showModal}
-              modalClose={() => setShowModal(false)}
-              onSelectImage={(imagePath: string) => { setImage({ uri: imagePath }), setShowModal(false) }}
-            /> */}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={{ padding: 2,  marginTop: 20}}
+              /> 
 
+                <FlatList
+      data={benefitsData}
+      renderItem={renderCard}
+      keyExtractor={item => item.id.toString()}
+    />
+        
 
           </View>
         </View>
@@ -273,6 +407,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'pink'
   },
+
+   card: {
+    backgroundColor: '#eff',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+    headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  titleStyle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  childText: {
+    fontSize: 16,
+    color: '#333',
+    paddingLeft: 10,
+  },
   image: {
     width: 60,
     height: 60,
@@ -297,6 +452,36 @@ const styles = StyleSheet.create({
   },
   star: {
     marginLeft: 8,
+  },
+
+
+  icon: {
+    width: 20,
+    height: 20,
+  },
+  limit: {
+    fontSize: 14,
+    color: '#444',
+    marginTop: 8,
+  },
+  used: {
+    fontSize: 12,
+    color: '#999',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#ddd',
+    marginVertical: 8,
+  },
+ 
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  available: {
+    fontSize: 15,
+    fontWeight: '600',
   },
 })
 
