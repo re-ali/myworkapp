@@ -35,8 +35,14 @@
 	<string>Please allow camera permission to capture your profile photo to upload</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>We use Face ID for authentication</string>
+
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>My App requires your location access to add your Address.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>My App  requires your location access to add your Address.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>My App requires your location access to add your Address.</string>
+
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Please allow gallery permission to setup your profile photo.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

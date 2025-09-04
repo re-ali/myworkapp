@@ -14,6 +14,17 @@ import RBSheet from 'react-native-raw-bottom-sheet';
 // import UploadMedia from '../componets/UploadMedia';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getFCMToken, requestNotificationPermission, setupNotificationHandlers } from '../notifications/firebaseNotification';
+import MapView, { Callout, Marker, PROVIDER_GOOGLE } from "react-native-maps";
+
+
+let _lat = '';
+let _lng = '';
+let _city = '';
+let _industryId = '';
+let _startDate = '';
+let _endDate = '';
+let _maxDistance = 0;
+
 
 
 
@@ -86,6 +97,10 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
    const [openCard, setOpenCard] = useState<string | null>(null);
   const animValuesRef = useRef<{ [key: string]: Animated.Value[] }>({});
 
+  //  _lat = _userLocation?.latitude;
+  // _lng = _userLocation?.longitude;
+  // _maxDistance = 123710000000000;
+
 
   // const refRBSheet = useRef<RBSheet>(null);
   // const refRBSheet = useRef<typeof RBSheet | null>(null);
@@ -104,6 +119,15 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
     emailError?: string;
     passwordError?: string;
   }>({});
+
+
+    const [lat_long, setLat_long] = useState({
+    markers: [],
+    latitude: _lat || 55.3838026,
+    longitude: _lng || 10.0674972,
+    latitudeDelta: 0.004100065389053498,
+    longitudeDelta: 0.0025863200426243793
+  });
 
 
    const toggleExpand = (id: number) => {
@@ -328,36 +352,59 @@ const handlePress = (item: typeof parentData[0]) => {
         }}>
 
          
-          <View style={{
-            flex: 0.3,
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingTop: Scale(20)
-
-          }}>
-            {/* <Image
-              source={IMAGES.Logo}
-              // source={imagePath ? { uri: imagePath?.uri } : IMAGES.Logo}
-
-              style={{ width: Scale(250), height: Scale(250) }}
-              resizeMode='contain'
-            /> */}
-            {/* <Text style={{ fontSize: Scale(40), color: 'red', fontWeight: '700', marginTop: 30 }}>Welcome To My App</Text> */}
-          </View>
+      
 
 
-          <View style={{
-            flex: 0.7,
-            // backgroundColor:'red', 
-            paddingHorizontal: Scale(15),
-            // alignItems: 'center', 
-            // justifyContent: 'center'
-          }}>
+          
             {/* <Entypo name="flow-branch" size={Scale(60)} /> */}
 
-           
+             <View style={styles.container}>
+     <MapView
+        key={'AIzaSyDuCIv4b-RqzNzJFYD24fU2U4GqANkDTHA'}
+       provider={PROVIDER_GOOGLE} // remove if not using Google Maps
+       style={styles.map}
+       region={{
+         latitude: 37.78825,
+         longitude: -122.4324,
+         latitudeDelta: 0.015,
+         longitudeDelta: 0.0121,
+       }}
+     >
 
-             <FlatList
+         {lat_long?.markers?.map((marker, index) => {
+          const scaleStyle = {
+            // transform: [
+            //   {
+            //     scale: interpolations[index].scale,
+            //   },
+            // ],
+          };
+          return (
+            <Marker
+              // key={index}
+              tracksViewChanges={Platform.OS === 'ios' ? false : true}
+              coordinate={marker.coordinate}
+              onPress={(e) => {
+                console.log('item clciked >>>', marker)
+                setModalDetails(marker)
+                setShowModal(true)
+              }}
+            >
+              <Image
+                source={marker?.image ? { uri: marker?.image } : images.appLogo}
+                style={styles.mapImage}
+                resizeMode='cover'>
+              </Image>
+              <View style={styles.notch} />
+
+            </Marker>
+          );
+        })}
+     </MapView>
+   </View>
+
+
+             {/* <FlatList
                 data={parentData}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
@@ -368,11 +415,10 @@ const handlePress = (item: typeof parentData[0]) => {
       data={benefitsData}
       renderItem={renderCard}
       keyExtractor={item => item.id.toString()}
-    />
+    /> */}
         
 
           </View>
-        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   )
@@ -483,6 +529,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
+   container: {
+   ...StyleSheet.absoluteFillObject,
+ flex:1,
+   justifyContent: 'flex-end',
+   alignItems: 'center',
+ },
+ map: {
+   ...StyleSheet.absoluteFillObject,
+ },
 })
 
 export default Home

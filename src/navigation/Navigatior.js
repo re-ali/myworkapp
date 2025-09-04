@@ -117,7 +117,7 @@ function Navigator() {
             <StatusBar
                 barStyle="dark-content" // iOS
                 backgroundColor={Colors.mainColor} // Android
-                translucent={false} // false keeps background solid
+                translucent={true} // false keeps background solid
             />
             <NavigationContainer ref={nvigationRef} >
                 <Stack.Navigator
