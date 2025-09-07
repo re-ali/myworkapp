@@ -126,9 +126,9 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [imagePath, setImage] = useState<imapeProp>({ uri: '' });
   const [expandedCardIds, setExpandedCardIds] = useState<number[]>([]);
-    const [menuVisible, setMenuVisible] = useState(false);
-      const mapRef = useRef(null);
- const [currentLocation, setCurrentLocation] = useState({
+  const [menuVisible, setMenuVisible] = useState(false);
+  const mapRef = useRef(null);
+  const [currentLocation, setCurrentLocation] = useState({
     latitude: 30.720608291270693,
     longitude: 76.7084975602337,
   });
@@ -141,7 +141,7 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
   };
 
 
-    const handleMenu = () => {
+  const handleMenu = () => {
     setMenuVisible(true);
     console.log("User logged out");
   };
@@ -416,7 +416,7 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
     console.log('error >>', error)
   }
 
-    const gotoCurrentLocation = () => {
+  const gotoCurrentLocation = () => {
     if (mapRef.current) {
       mapRef.current.animateToRegion(
         {
@@ -460,7 +460,7 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
           {/* <Entypo name="flow-branch" size={Scale(60)} /> */}
 
           <View style={styles.container}>
-         {/* <MapView
+            {/* <MapView
         key={'AIzaSyDuCIv4b-RqzNzJFYD24fU2U4GqANkDTHA'}
        provider={PROVIDER_GOOGLE} // remove if not using Google Maps
        style={styles.map}
