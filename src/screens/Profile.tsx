@@ -15,6 +15,7 @@ interface LoginProps {
 }
 
 
+
 const Profile: React.FC<LoginProps> = ({ navigation }) => {
 
   return (
@@ -43,12 +44,39 @@ const Profile: React.FC<LoginProps> = ({ navigation }) => {
 
 
       </Swiper>
-
+ 
     </View>
   )
 }
 
 const styles = StyleSheet.create({
+
+ 
+  map: {
+    flex: 1,
+  },
+  mapImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  notch: {
+    // your notch styling here
+  },
+  currentLocationButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    backgroundColor: 'white',
+    borderRadius: 30,
+    padding: 10,
+    elevation: 5, // shadow for android
+    shadowColor: '#000', // shadow for ios
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+  },
+
   buttonStyle: {
     backgroundColor: 'transparent',
     flexDirection: 'row',

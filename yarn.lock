@@ -2025,6 +2025,16 @@
   resolved "https://registry.yarnpkg.com/@react-native-community/slider/-/slider-4.5.7.tgz#523178779f302aa162b0d57211842f81522e8ece"
   integrity sha512-WMDDZjNF2Bd8M8TrSqKf5xhM9ikdfCHtSPur64Ow3bB/OVrKufUQZ59NmYdNZNeGPvcHHTsafuYTY8zfZfbchQ==
 
+"@react-native-documents/picker@^10.1.5":
+  version "10.1.5"
+  resolved "https://registry.yarnpkg.com/@react-native-documents/picker/-/picker-10.1.5.tgz#3b9cd338210e70602a30d739f2c3ee919177c6a9"
+  integrity sha512-ajn55rNyxUqbQbz5gmm9gYFI1ifHBmMLH4jVWViA7IFqk1EiEM+pJcpoHizWr5hetR6tzQsaoI4vzCNv/WyA7w==
+
+"@react-native-documents/viewer@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@react-native-documents/viewer/-/viewer-1.0.1.tgz#588e0e5772b824e3c8cb6252f63bd8eee599a13f"
+  integrity sha512-0mn+UkQ/+NYNgHQoVVXiIwTaPDNZ1vH8xgjYNOerDcpihMWRGoDT5zmwk1jAC9YxgTEoKttFRA+0JhEt+4cnFQ==
+
 "@react-native-firebase/app@21.14.0":
   version "21.14.0"
   resolved "https://registry.yarnpkg.com/@react-native-firebase/app/-/app-21.14.0.tgz#5061c94f37331b89fb50d20d3c71c6120978b4f8"

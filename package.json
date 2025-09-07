@@ -12,6 +12,8 @@
   "dependencies": {
     "@notifee/react-native": "^9.1.8",
     "@react-native-community/slider": "^4.5.7",
+    "@react-native-documents/picker": "^10.1.5",
+    "@react-native-documents/viewer": "^1.0.1",
     "@react-native-firebase/app": "21.14.0",
     "@react-native-firebase/messaging": "21.14.0",
     "@react-navigation/bottom-tabs": "^7.4.2",
