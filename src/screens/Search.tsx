@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   View, Text, TouchableOpacity, Image, StyleSheet,
   UIManager,
@@ -28,7 +28,11 @@ import { HomeSvg } from '../assets/svgPath';
 import RNModal from 'react-native-modal';
 import Tooltip from 'react-native-walkthrough-tooltip';
 import CustomSlider from '../componets/CustomSlider';
+import { useLazyGetVideoListQuery } from '../redux/ServiceApis/VideoSlice';
+import { ActivityIndicator } from 'react-native';
 
+import Video from 'react-native-video';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -54,6 +58,7 @@ const screen = Dimensions.get('screen');
 const Home: React.FC<LoginProps> = ({ navigation }) => {
 
   const [visibleId, setVisibleId] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
 
 
   const [visible, setVisible] = useState(false);
@@ -74,7 +79,37 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
     return initialRatings;
   });
 
+  const [items, setItems] = useState<any[]>([]);
 
+    const [trigerVideoList, { data, isLoading, isFetching }] = useLazyGetVideoListQuery();
+
+      useEffect(() => {
+        loadNotifications(0, true);
+      }, []);
+
+        const loadNotifications = useCallback(
+          async (customOffset = 0, isRefresh = false) => {
+            try {
+      
+              const res = await trigerVideoList({});
+              console.log('data res video>>>', res?.data)
+              const fetched = res.data?.videos[0]?.video_files;
+      
+              if (isRefresh || customOffset === 0) {
+                setItems(fetched);
+              } else {
+                setItems(prev => [...prev, ...fetched]);
+              }
+      
+            } catch (err) {
+              console.log('Pagination error:', err);
+            } finally {
+            }
+          },
+          []
+        );
+    
+  
 
   const openPopover = (item: any) => {
     const ref = itemRefs.current[item.id];
@@ -217,29 +252,72 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
 
   );
  
+const getBestVideo = (videoFiles = []) => {
+  return (
+    videoFiles.find(v => v.quality === 'hd' && v.file_type === 'video/mp4') ||
+    videoFiles.find(v => v.quality === 'sd') ||
+    videoFiles[0]
+  );
+};
 
+
+
+
+const renderItemT = ({ item, index }: any) => {
+  const video = getBestVideo(item ? [item] : []);
+
+  if (!item?.link) return null;
+
+  return (
+    <View style={styles.videoCard}>
+      <Video
+        source={{ uri: item.link }}
+
+        style={styles.video}
+        resizeMode="cover"
+
+        paused={true}              // autoplay
+        muted={true}                // silent autoplay (important)
+        repeat={true}               // loop video
+
+        controls={true}             // native controls
+        fullscreen={false}
+
+        playInBackground={false}
+        playWhenInactive={false}
+
+        ignoreSilentSwitch="ignore" // iOS
+        allowsExternalPlayback={false}
+
+        bufferConfig={{
+          minBufferMs: 15000,
+          maxBufferMs: 50000,
+          bufferForPlaybackMs: 2500,
+          bufferForPlaybackAfterRebufferMs: 5000,
+        }}
+
+        onLoad={(data) => {
+          console.log('Video loaded', data.duration);
+        }}
+
+        onError={(error) => {
+          console.log('Video error', error);
+        }}
+
+        onBuffer={({ isBuffering }) => {
+          console.log('Buffering:', isBuffering);
+        }}
+      />
+    </View>
+  );
+};
 
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }}
-    // behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={{
-          flex: 1,
-          backgroundColor: Colors.mainColor,
-          // alignItems: 'center', 
-          justifyContent: 'center'
-        }}>
-
-
-  <FlatList
-          data={dataff}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItemd}
-          contentContainerStyle={{ padding: 16 }}
-        />
-{/* 
+        <View style={{ flex: 1 , paddingTop: insets.top}}>
+    
+ 
+      {/* 
           <Popover
             isVisible={visible}
             from={new Rect(330, 33, 40, 20)}
@@ -269,6 +347,7 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
             </Text>
             <Text>{selectedItem?.description}</Text>
           </Popover> */}
+          
 
          <RNModal
             isVisible={visible}
@@ -320,21 +399,34 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
             </View>
           </RNModal> 
 
+          <FlatList
+        data={items}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItemT}
+        contentContainerStyle={{ paddingBottom: Scale(100) }}
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled={false}
+        ListFooterComponent={
+          isFetching && items.length > 0 ? (
+            <ActivityIndicator
+              size="large"
+              color={Colors.THEAME_GREEN}
+              style={{ marginVertical: 12 }}
+            />
+          ) : null
+        }
 
-
-          {/* <Tooltip
-                isVisible={visible}
-                content={<Text>Check this out!</Text>}
-                placement="top"
-                onClose={closePopover}
-              >
-                <TouchableHighlight style={styles.touchable}>
-                  <Text>Press me</Text>
-                </TouchableHighlight>
-              </Tooltip> */}
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        ListEmptyComponent={
+          !isLoading && !isFetching ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No data found</Text>
+            </View>
+          ) : null
+        }
+      />
+ 
+    
+    </View>
   )
 }
 
@@ -476,6 +568,122 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     borderTopColor: '#fff',
   },
+
+
+
+   
+  card: {
+    backgroundColor: '#eff',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  titleStyle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  childText: {
+    fontSize: 16,
+    color: '#333',
+    paddingLeft: 10,
+  },
+ 
+  message: {
+    fontSize: Scale(19),
+    color: Colors.BLACK,
+    marginBottom: Scale(10),
+  },
+ 
+  icon: {
+    width: 20,
+    height: 20,
+  },
+  limit: {
+    fontSize: 14,
+    color: '#444',
+    marginTop: 8,
+  },
+  used: {
+    fontSize: 12,
+    color: '#999',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#ddd',
+    marginVertical: 8,
+  },
+  dateText: {
+    fontSize: Scale(14),
+    color: Colors.GREY_7,
+    marginBottom: Scale(6),
+  },
+
+  notificationCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.GREY_3,
+    // marginBottom: Scale(18),
+    paddingHorizontal: Scale(10),
+    // backgroundColor:'red',
+
+  },
+  avatar: {
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    marginRight: Scale(12),
+  },
+
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  available: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+ 
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    marginTop: Scale(30),
+  },
+
+  emptyText: {
+    color: Colors.BLACK,
+    fontSize: Scale(25),
+    // fontFamily: FONTS.gilroy_medium,
+    marginTop: Scale(150)
+  },
+
+
+   videoCard: {
+    width: '100%',
+    height: 500,
+    marginBottom: 20,
+    // backgroundColor:'red',
+    borderRadius: 12,
+    alignSelf:"center",
+    gap:10,
+    marginHorizontal:10,
+    paddingHorizontal:10,
+    overflow: 'hidden',
+  },
+  video: {
+    width: '100%',
+    height: '100%',
+  },
 })
 
 export default Home
+
+ 

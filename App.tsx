@@ -14,8 +14,8 @@
 
 // import { GestureHandlerRootView } from 'react-native-gesture-handler';
 // import { getFCMToken, requestNotificationPermission, setupNotificationHandlers } from './src/notifications/firebaseNotification';
- 
- 
+
+
 
 // function App() {
 
@@ -74,9 +74,9 @@
 //       />
 //       {/* <Navigator /> */}
 //          {/* ✅ NavigationContainer uses theme */}
-     
+
 //         <Navigator />
-      
+
 //     </>
 //   );
 // }
@@ -114,19 +114,37 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 // import Navigator from "./src/navigation/Navigator";
 import Navigator from "./src/navigation/Navigatior";
 import { ThemeProvider } from "./src/navigation/ThemeProvider";
+import { Provider } from "react-redux";
+import { persistor, store } from './src/redux/store'
+import { PersistGate } from "redux-persist/integration/react";
+import BootSplash from "react-native-bootsplash";
+import Toast from "react-native-toast-message";
+import { CustomToast } from "./src/componets/CustomToast";
 
 function App() {
+
   React.useEffect(() => {
     LogBox.ignoreAllLogs();
   }, []);
 
+    React.useEffect(() => {
+    setTimeout(async () => {
+      await BootSplash.hide({ fade: true });
+    }, 1000);
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <ThemeProvider>
-          <Navigator />
-        </ThemeProvider>
-      </SafeAreaProvider>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <SafeAreaProvider>
+            <ThemeProvider>
+              <Navigator />
+            </ThemeProvider>
+            <Toast config={CustomToast} />
+          </SafeAreaProvider>
+        </PersistGate>
+      </Provider>
     </GestureHandlerRootView>
   );
 }

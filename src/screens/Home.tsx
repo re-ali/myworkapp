@@ -1,9 +1,10 @@
-import React, { useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   View, Text, TouchableOpacity, Image, StyleSheet,
   Animated,
   KeyboardAvoidingView, Platform, ScrollView, Button, FlatList, StatusBar,
-  Easing
+  Easing,
+  RefreshControl
 } from 'react-native'
 import Scale from '../helper/Scale';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -21,7 +22,12 @@ import { keepLocalCopy, pick, types } from '@react-native-documents/picker';
 import { viewDocument } from '@react-native-documents/viewer';
 import CustomHeader from '../utility/CustomHeader';
 import MenuBar from '../utility/MenuBar';
-
+import { useLazyGetHomeListQuery, useLazyGetProfileQuery } from '../redux/ServiceApis/HomeSlice';
+import { ActivityIndicator } from 'react-native';
+import moment from 'moment'
+import NotificationsShimmer from './NotificationsShimmer';
+import { showCustomToast } from '../componets/showCustomToast';
+import { useFocusEffect } from '@react-navigation/native';
 
 
 let _lat = '';
@@ -133,6 +139,83 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
     longitude: 76.7084975602337,
   });
 
+  const limit = 5;
+  const [items, setItems] = useState<any[]>([]);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const isLoadingMore = useRef(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  const [triggerWorkerJobList, { data, isLoading, isFetching }] = useLazyGetHomeListQuery();
+  const [getProfile, { data:profileData, isLoading:loder, isFetching:fetch }] = useLazyGetProfileQuery();
+console.log('data profile >>>', profileData)
+
+
+  // AUTO GET CURRENT LOCATION ONCE
+  useEffect(() => {
+    loadNotifications(0, true);
+    getProfile({})
+    
+  }, []);
+
+   
+ 
+
+  const loadNotifications = useCallback(
+    async (customOffset = 0, isRefresh = false) => {
+      try {
+        const params = {limit, skip: customOffset};
+
+        const res = await triggerWorkerJobList(params,true);
+        console.log('data res >>>', res?.data)
+        if (!res?.data?.quotes) return;
+
+ 
+
+        const fetched = res.data.quotes;
+
+        if (isRefresh || customOffset === 0) {
+          setItems(fetched);
+        } else {
+          setItems(prev => [...prev, ...fetched]);
+        }
+
+        setHasMore(fetched.length === limit);
+      } catch (err) {
+        console.log('Pagination error:', err);
+      } finally {
+        isLoadingMore.current = false;
+        setRefreshing(false);
+        setInitialLoading(false);
+      }
+    },
+    [limit]
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setOffset(0);
+    setHasMore(true);
+    loadNotifications(0, true);
+  };
+
+  const onEndReached = () => {
+    if (
+      isLoadingMore.current ||
+      isFetching ||
+      !hasMore ||
+      items.length < limit // 🔥 critical fix
+    ) {
+      return;
+    }
+
+    isLoadingMore.current = true;
+
+    const newOffset = offset + limit;
+    setOffset(newOffset);
+    loadNotifications(newOffset);
+  };
 
 
   const handleLogout = () => {
@@ -412,7 +495,7 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
     }
   };
 
-  const handleError = (error) => {
+  const handleError = (error: any) => {
     console.log('error >>', error)
   }
 
@@ -430,8 +513,58 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
     }
   };
 
+  const renderItemT = ({ item, index }: any) => {
+    let _time = item.createdAt ? moment(item.createdAt).format("MMM D, YYYY | hh:mm A") : "";
+    const isRead = item.isRead;
+
+    return (
+      <TouchableOpacity
+        disabled={item.isRead}
+        style={{ 
+          backgroundColor: isRead ? Colors.WHITE : Colors.LIGHT_GREEN,
+           marginVertical: 5,
+            alignItems:'flex-start' 
+          }}
+      >
+        <View style={{
+          flexDirection: "row",
+          // marginTop: Scale(15),
+          justifyContent: "space-between",
+          marginBottom: Scale(10),
+          gap: Scale(10),
+          alignItems: "center",
+        }}>
+          <View style={styles.divider} />
+          <Text style={styles.dateText}>{_time}</Text>
+          <View style={styles.divider} />
+        </View>
+        <View key={item.id} style={[styles.notificationCard,
+        ]}>
+          <Image source={item?.url ? { uri: item?.url } : IMAGES.Circle1}
+            style={styles.avatar} />
+          <View style={styles.textContainer}>
+            {/* <Text style={styles.message}>{item?.title}</Text> */}
+            <Text style={[styles.message, { color: isRead ? Colors.GREY_7 : Colors.BLACK },
+            ]}>
+              {item?.quote}
+            </Text>
+            <Text style={{ color: isRead ? Colors.GREY_7 : Colors.BLACK }}>{item?.author}</Text>
+
+          </View>
+        </View>
+      </TouchableOpacity>
+    )
+  }
+
+    const isActionLoading = (initialLoading && items.length === 0) ;
+
+  
+
   return (
-    <KeyboardAvoidingView style={{ flex: 1, paddingTop: insets.top }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    // <KeyboardAvoidingView style={{ flex: 1, paddingTop: insets.top }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+
+    <View style={{ flex: 1 , paddingTop: insets.top}}>
+
       <CustomHeader
         leftIcon="menu"
         centerText="Home"
@@ -445,22 +578,69 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
         }}
       />
 
-      <ScrollView contentContainerStyle={[{ flexGrow: 1 }, {
+        {isActionLoading && (
+        <View style={{  }}>
+         <FlatList
+          data={[1, 2, 3, 4]}
+          keyExtractor={(i) => i.toString()}
+          renderItem={() => <NotificationsShimmer />}
+        />
+        </View>
+      )}
+
+      <FlatList
+        data={items}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItemT}
+        contentContainerStyle={{ paddingBottom: Scale(100) }}
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled={false}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.2}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.THEAME_GREEN]}
+          />
+        }
+        ListFooterComponent={
+          isFetching && items.length > 0 ? (
+            <ActivityIndicator
+              size="large"
+              color={Colors.THEAME_GREEN}
+              style={{ marginVertical: 12 }}
+            />
+          ) : null
+        }
+
+        ListEmptyComponent={
+          !isLoading && !isFetching ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No data found</Text>
+            </View>
+          ) : null
+        }
+      />
+    </View>
+  )
+
+  {/* <ScrollView contentContainerStyle={[{ flexGrow: 1 }, {
         // marginTop: insets.top,
         // backgroundColor: Colors.mainColor,
         backgroundColor: 'red'
-      }]}>
-        <View style={{
+      }]}> */}
+  {/* <View style={{
           flex: 1,
           backgroundColor: Colors.mainColor,
           // alignItems: 'center', 
           justifyContent: 'center'
-        }}>
+        }}> */}
 
-          {/* <Entypo name="flow-branch" size={Scale(60)} /> */}
+  {/* <Entypo name="flow-branch" size={Scale(60)} /> */ }
 
-          <View style={styles.container}>
-            {/* <MapView
+  {/* <View style={styles.container}> */ }
+  {/* <MapView
         key={'AIzaSyDuCIv4b-RqzNzJFYD24fU2U4GqANkDTHA'}
        provider={PROVIDER_GOOGLE} // remove if not using Google Maps
        style={styles.map}
@@ -477,7 +657,7 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
           const scaleStyle = {
             // transform: [
             //   {
-            //     scale: interpolations[index].scale,
+            //     Scale: interpolations[index].Scale,
             //   },
             // ],
           };
@@ -505,10 +685,10 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
      </MapView>   */}
 
 
-          </View>
+  {/* </View> */ }
 
 
-          {/* <FlatList
+  {/* <FlatList
                 data={parentData}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
@@ -520,12 +700,12 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
       renderItem={renderCard}
       keyExtractor={item => item.id.toString()}
     /> */}
-          <Button title="Pick a document" onPress={handlePick} />
+  {/* <Button title="Pick a document" onPress={handlePick} />
           {fileInfo && (
             <Text>{`Name: ${fileInfo.name}, URI: ${fileInfo.uri}`}</Text>
-          )}
+          )} */}
 
-          <Button title="Pick and save locally" onPress={handleImportAndSave} />
+  {/* <Button title="Pick and save locally" onPress={handleImportAndSave} />
           <Button title="Pick & View Document" onPress={handlePickAndView} />
           <Button title="View API Document" onPress={handleViewFromApi} />
           <Button
@@ -541,12 +721,15 @@ const Home: React.FC<LoginProps> = ({ navigation }) => {
             visible={menuVisible}
             onClose={() => setMenuVisible(false)}
             onLogout={handleLogout}
-          />
+          /> */}
 
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  )
+
+  {/* </View> */ }
+  {/* </ScrollView> */ }
+
+
+  {/* </KeyboardAvoidingView> */ }
+
 }
 
 const styles = StyleSheet.create({
@@ -609,6 +792,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
+  message: {
+    fontSize: Scale(19),
+    color: Colors.BLACK,
+    marginBottom: Scale(10),
+  },
   title: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -644,6 +832,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
     marginVertical: 8,
   },
+  dateText: {
+    fontSize: Scale(14),
+    color: Colors.GREY_7,
+    marginBottom: Scale(6),
+  },
+
+  notificationCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.GREY_3,
+    // marginBottom: Scale(18),
+    paddingHorizontal: Scale(10),
+    // backgroundColor:'red',
+
+  },
+  avatar: {
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    marginRight: Scale(12),
+  },
 
   row: {
     flexDirection: 'row',
@@ -662,6 +872,17 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    marginTop: Scale(30),
+  },
+
+  emptyText: {
+    color: Colors.BLACK,
+    fontSize: Scale(25),
+    // fontFamily: FONTS.gilroy_medium,
+    marginTop: Scale(150)
   },
 })
 
